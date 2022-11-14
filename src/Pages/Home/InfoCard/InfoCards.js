@@ -14,14 +14,14 @@ const InfoCards = () => {
             bgClass: 'bg-gradient-to-r from-primary to-secondary'
         },
         {
-            id: 1,
+            id: 2,
             name: 'raian',
             description: 'this is raian',
             icon: marker,
             bgClass: 'bg-primary'
         },
         {
-            id: 1,
+            id: 3,
             name: 'raian',
             description: 'this is raian',
             icon: phone,
