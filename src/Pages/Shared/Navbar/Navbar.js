@@ -9,6 +9,7 @@ const Navbar = () => {
         <li><Link to='/About'>About</Link></li>
         <li><Link to='/Reviews'>Reviews</Link></li>
         <li><Link to='/Login'>Login</Link></li>
+        <li><Link to='/Signup'>Signup</Link></li>
     </React.Fragment>
     return (
         <div className="navbar bg-base-100 flex justify-between">
