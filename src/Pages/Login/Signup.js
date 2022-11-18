@@ -1,13 +1,46 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from "react-hook-form";
-import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const Signup = () => {
     const { register, formState: { errors }, handleSubmit } = useForm();
+
+    // Get CreateUser From AuthContext :
+    const { createUser, updateUser } = useContext(AuthContext);
+    const [signUpError, setSignUpError] = useState('');
+    const navigate = useNavigate();
+
     const handleSignUp = data => {
         console.log(data);
-        console.log(errors);
+        setSignUpError('');
+        createUser(data.email, data.password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                console.log(user);
+
+                toast('User Created Successfully')
+
+                const userInfo = {
+                    displayName: data.name
+                }
+                updateUser(userInfo)
+                    .then(() => {
+                        navigate('/');
+                    })
+                    .catch((error) => { console.log(error); });
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                console.log(error);
+                setSignUpError(errorMessage);
+            });
     }
+
+
+
     return (
         <div className='flex justify-center items-center'>
             <div className='w-96 p-7'>
@@ -58,6 +91,7 @@ const Signup = () => {
                         <span className="label-text">Forget Password!</span>
                     </label> */}
                     <input className='btn btn-outline w-full mt-5' type="submit" value='Sign-Up' />
+                    {signUpError && <p className='text-red-600'>{signUpError}</p>}
                 </form>
 
 
