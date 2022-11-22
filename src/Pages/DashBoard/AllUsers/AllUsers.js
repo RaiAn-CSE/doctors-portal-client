@@ -52,7 +52,6 @@ const AllUsers = () => {
                 <td><button className='btn btn-xs btn-danger'>Delete</button></td>
               </tr>)
             }
-
           </tbody>
         </table>
       </div>
