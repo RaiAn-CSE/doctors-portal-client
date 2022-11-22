@@ -1,110 +1,112 @@
 import React, { useContext, useState } from 'react';
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthProvider';
+import useToken from '../../hooks/useToken';
 
-const Signup = () => {
-    const { register, formState: { errors }, handleSubmit } = useForm();
-
-    // Get CreateUser From AuthContext :
+const SignUp = () => {
+    const { register, handleSubmit, formState: { errors } } = useForm();
     const { createUser, updateUser } = useContext(AuthContext);
-    const [signUpError, setSignUpError] = useState('');
+    const [signUpError, setSignUPError] = useState('');
+    const [createdUserEmail, setCreatedUserEmail] = useState('')
+    const [token] = useToken(createdUserEmail);
     const navigate = useNavigate();
 
-    const handleSignUp = data => {
-        console.log(data);
-        setSignUpError('');
+    if (token) {
+        navigate('/');
+    }
+
+    const handleSignUp = (data) => {
+        setSignUPError('');
         createUser(data.email, data.password)
-            .then((userCredential) => {
-                // Signed in 
-                const user = userCredential.user;
+            .then(result => {
+                const user = result.user;
                 console.log(user);
-
-                toast('User Created Successfully')
-
+                toast('User Created Successfully.')
                 const userInfo = {
                     displayName: data.name
                 }
                 updateUser(userInfo)
                     .then(() => {
-                        navigate('/');
+                        saveUser(data.name, data.email);
                     })
-                    .catch((error) => { console.log(error); });
+                    .catch(err => console.log(err));
             })
-            .catch((error) => {
-                const errorMessage = error.message;
-                console.log(error);
-                setSignUpError(errorMessage);
+            .catch(error => {
+                console.log(error)
+                setSignUPError(error.message)
             });
+    }
+
+    const saveUser = (name, email) => {
+        const user = { name, email };
+        fetch('http://localhost:5000/users', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+            .then(res => res.json())
+            .then(data => {
+                getUserToken(email);
+                // setCreatedUserEmail(email);
+                // navigate('/')
+            })
+    }
+
+    const getUserToken = email => {
+        fetch(`http://localhost:5000/jwt?email=${email}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    navigate('/')
+                }
+            })
     }
 
 
 
     return (
-        <div className='flex justify-center items-center'>
+        <div className='h-[800px] flex justify-center items-center'>
             <div className='w-96 p-7'>
-                <h2 className='text-4xl font-bold text-center'>Sign-Up</h2>
-
-
-
+                <h2 className='text-xl text-center'>Sign Up</h2>
                 <form onSubmit={handleSubmit(handleSignUp)}>
-                    {/* Name Field  */}
                     <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Name</span>
-                        </label>
-                        <input type="name" placeholder="Name" className="input input-bordered w-full max-w-xs"
-                            {...register("name", {
-                                required: 'Name is required',
-                            })} />
-                        {errors.name && <p role="alert">{errors.name?.message}</p>}
+                        <label className="label"> <span className="label-text">Name</span></label>
+                        <input type="text" {...register("name", {
+                            required: "Name is Required"
+                        })} className="input input-bordered w-full max-w-xs" />
+                        {errors.name && <p className='text-red-500'>{errors.name.message}</p>}
                     </div>
-
-                    {/* Email Field  */}
                     <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Email</span>
-                        </label>
-                        <input type="email" placeholder="Email" className="input input-bordered w-full max-w-xs"
-                            {...register("email", {
-                                required: 'Email Address is required',
-                            })} />
-                        {errors.email && <p role="alert">{errors.email?.message}</p>}
+                        <label className="label"> <span className="label-text">Email</span></label>
+                        <input type="email" {...register("email", {
+                            required: true
+                        })} className="input input-bordered w-full max-w-xs" />
+                        {errors.email && <p className='text-red-500'>{errors.email.message}</p>}
                     </div>
-
-                    {/* Password Field  */}
                     <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Email</span>
-                        </label>
-                        <input type="password" placeholder="password" className="input input-bordered w-full max-w-xs"{...register("password", {
-                            required: true,
-                            minLength: { value: 6, message: "Must be 6 characters" },
-                            pattern: { value: /(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{6}/, message: 'Password must be strong' }
-                        })} />
-                        {errors.password && <p role="alert">{errors.password?.message}</p>}
+                        <label className="label"> <span className="label-text">Password</span></label>
+                        <input type="password" {...register("password", {
+                            required: "Password is required",
+                            minLength: { value: 6, message: "Password must be 6 characters long" },
+                            pattern: { value: /(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])/, message: 'Password must have uppercase, number and special characters' }
+                        })} className="input input-bordered w-full max-w-xs" />
+                        {errors.password && <p className='text-red-500'>{errors.password.message}</p>}
                     </div>
-
-
-                    {/* <label className="label">
-                        <span className="label-text">Forget Password!</span>
-                    </label> */}
-                    <input className='btn btn-outline w-full mt-5' type="submit" value='Sign-Up' />
+                    <input className='btn btn-accent w-full mt-4' value="Sign Up" type="submit" />
                     {signUpError && <p className='text-red-600'>{signUpError}</p>}
                 </form>
-
-
-
-                <p>Login Page <Link className='text-secondary' to='/login'>Login</Link> </p>
+                <p>Already have an account <Link className='text-secondary' to="/login">Please Login</Link></p>
                 <div className="divider">OR</div>
-                <button className='btn btn-outline w-full'>Google</button>
-
+                <button className='btn btn-outline w-full'>CONTINUE WITH GOOGLE</button>
 
             </div>
-
         </div>
     );
 };
 
-export default Signup;
+export default SignUp;
